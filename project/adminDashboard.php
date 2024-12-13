@@ -1,5 +1,29 @@
 <?php
-include_once "db.php";
+
+//TODO implement session
+
+// Imports
+require "db.php";
+
+// Variables
+$userType = ["admin","content_creator", "editor"];
+global $db;
+$adminName = "Sara"; //TODO this name should be dynamic
+
+// Access all users
+$rs = $db->query("select * from users") ;
+$users = $rs->fetchAll() ;
+
+// Total use count
+$totalUsersNo = $rs->rowCount();
+
+// Total content_creator count
+$creatorQuery = $db->query("SELECT * FROM users WHERE type = 'content_creator'");
+$contentCreatorsNo = $creatorQuery->rowCount();
+
+// Total editor count
+$editorQuery = $db->query("SELECT * FROM users WHERE type = 'editor'");
+$editorsNo = $editorQuery->rowCount();
 
 ?>
 
@@ -67,7 +91,7 @@ include_once "db.php";
 
         .main-content {
             flex: 1;
-            margin-left: 250px;
+            margin-left: 160px;
             padding: 20px;
         }
 
@@ -171,24 +195,24 @@ include_once "db.php";
             <h1>Dashboard Overview</h1>
             <div class="user-info">
                 <i class="fas fa-user-circle"></i>
-                <span>Welcome, Admin</span>
+                <span>Welcome, Admin <?= $adminName ?></span>
             </div>
         </div>
 
         <div class="stats-container">
             <div class="stat-card">
                 <h3>Content Creators</h3>
-                <div class="number">24</div>
+                <div class="number"><?= $contentCreatorsNo ?></div>
                 <div class="description">Active content creators in the system</div>
             </div>
             <div class="stat-card">
                 <h3>Editors</h3>
-                <div class="number">12</div>
+                <div class="number"><?= $editorsNo ?></div>
                 <div class="description">Active editors managing content</div>
             </div>
             <div class="stat-card">
                 <h3>Total Users</h3>
-                <div class="number">36</div>
+                <div class="number"><?= $totalUsersNo ?></div>
                 <div class="description">Total registered users</div>
             </div>
         </div>
