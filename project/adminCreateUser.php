@@ -1,3 +1,49 @@
+<?php
+
+// Imports
+require "db.php";
+
+// Variables
+$success = false;
+
+// Validation for the form
+require "db.php";
+
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    extract($_POST); // $username, $email, $password, $userType
+
+    // Error array
+    $error = [];
+
+    // Validate username
+    if (!isset($username) || strlen(trim($username)) < 3) {
+        $error["username"] = "Username must be at least 3 characters long";
+    }
+
+    // Validate email
+    if (!isset($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error["email"] = "Please enter a valid email address";
+    }
+
+    // Validate password
+    if (!isset($password) || strlen($password) < 5) {
+        $error["password"] = "Password must be at least 5 characters long";
+    }
+
+    // Validate userType
+    if (!isset($userType) || !in_array($userType, ["content_creator", "editor"])) {
+        $error["userType"] = "Please select a user type";
+    }
+
+    if (empty($error)) {
+        // TODO Add the user to the databse
+        //show success message
+        $success = true;
+    }
+}
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -62,7 +108,7 @@
 
         .main-content {
             flex: 1;
-            margin-left: 250px;
+            margin-left: 50px;
             padding: 20px;
         }
 
@@ -141,6 +187,26 @@
             border-top: 1px solid #362a55;
             padding-top: 20px;
         }
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .form-group input.error,
+        .form-group select.error {
+            border-color: #dc3545;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #c3e6cb;
+        }
     </style>
 </head>
 <body>
@@ -188,29 +254,48 @@
         </div>
 
         <div class="form-container">
-            <form action="create_user.php" method="POST">
+            <form action="" method="POST">
+
+                <?php if ($success): ?>
+                    <div class="success-message">
+                        User created successfully!
+                    </div>
+                <?php endif; ?>
+
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <input type="text" id="username" name="username" required placeholder="Enter username">
+                    <input type="text" id="username" name="username" required placeholder="Enter username"  value="<?= isset($_POST['username']) ? $_POST['username'] : ''; ?>">
+                    <?php if (isset($error['username'])): ?>
+                        <div class="error-message"><?php echo $error['username']; ?></div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="form-group">
                     <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required placeholder="Enter email">
+                    <input type="email" id="email" name="email" required placeholder="Enter email" value="<?= isset($_POST['email']) ? $_POST['email'] : ''; ?>">
+                    <?php if (isset($error['email'])): ?>
+                        <div class="error-message"><?php echo $error['email']; ?></div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="form-group">
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" required placeholder="Enter password">
+                    <?php if (isset($error['password'])): ?>
+                        <div class="error-message"><?php echo $error['password']; ?></div>
+                    <?php endif; ?>
                 </div>
 
                 <div class="form-group">
                     <label for="userType">User Type</label>
                     <select id="userType" name="userType" required>
-                        <option value="">Select user type</option>
-                        <option value="content_creator">Content Creator</option>
-                        <option value="editor">Editor</option>
+                        <option value="" <?= isset($userType) && $userType === "" ? " selected" : ""  ?>>Select user type</option>
+                        <option value="content_creator" <?= isset($userType) && $userType === "content_creator" ? " selected" : ""  ?>>Content Creator</option>
+                        <option value="editor" <?= isset($userType) && $userType === "editor" ? " selected" : ""  ?>>Editor</option>
                     </select>
+                    <?php if (isset($error['userType'])): ?>
+                        <div class="error-message"><?php echo $error['userType']; ?></div>
+                    <?php endif; ?>
                 </div>
 
                 <button type="submit" class="btn">Create User</button>
