@@ -1,3 +1,43 @@
+<?php
+// Imports
+require "db.php";
+
+// Variables
+$success = false;
+
+// Validation for the form
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    extract($_POST); // $username, $email, $password, $terms
+
+    // Error array
+    $error = [];
+
+    // Validate username
+    if (!isset($username) || strlen(trim($username)) < 3) {
+        $error["username"] = "Username must be at least 3 characters long";
+    }
+
+    // Validate email
+    if (!isset($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $error["email"] = "Please enter a valid email address";
+    }
+
+    // Validate password
+    if (!isset($password) || strlen($password) < 5) {
+        $error["password"] = "Password must be at least 5 characters long";
+    }
+
+    // Validate terms
+    if (!isset($terms)) {
+        $error["terms"] = "You must agree to the Terms & Conditions";
+    }
+
+    if (empty($error)) {
+        // TODO: Add login logic here
+        $success = true;
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -69,7 +109,8 @@
         }
 
         input[type="text"],
-        input[type="email"] {
+        input[type="email"],
+        input[type="password"] {
             width: 100%;
             padding: 8px 0;
             border: none;
@@ -79,7 +120,8 @@
         }
 
         input[type="text"]:focus,
-        input[type="email"]:focus {
+        input[type="email"]:focus,
+        input[type="password"]:focus {
             outline: none;
             border-bottom-color: #231942;
         }
@@ -116,6 +158,7 @@
             font-size: 16px;
             cursor: pointer;
             transition: background-color 0.3s;
+            width: 100%;
         }
 
         button:hover {
@@ -128,20 +171,20 @@
             border-radius: 10px;
         }
 
-        .dropdown {
-            position: relative;
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
         }
 
-        .dropdown::after {
-            content: '';
-            position: absolute;
-            right: 10px;
-            top: 50%;
-            width: 0;
-            height: 0;
-            border-left: 5px solid transparent;
-            border-right: 5px solid transparent;
-            border-top: 5px solid #231942;
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #c3e6cb;
         }
 
         @media (max-width: 768px) {
@@ -149,7 +192,7 @@
                 flex-direction: column;
                 padding: 20px;
             }
-            
+
             .image-section {
                 display: none;
             }
@@ -157,38 +200,72 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="signup-section">
-            <h1>Welcome Back!</h1>
-            <p class="subtitle">Log in and restart your aesthetic journey!</p>
+<div class="container">
+    <div class="signup-section">
+        <h1>Welcome Back!</h1>
+        <p class="subtitle">Log in and restart your aesthetic journey!</p>
 
-            <form>
-                <div class="form-group">
-                    <label for="username">User Name</label>
-                    <input type="text" id="username" placeholder="e.g. example">
-                </div>
+        <form method="POST" action="">
+            <div class="form-group">
+                <label for="username">User Name</label>
+                <input
+                        type="text"
+                        id="username"
+                        name="username"
+                        placeholder="e.g. example"
+                        value="<?= isset($_POST['username']) ? htmlspecialchars($_POST['username']) : ''; ?>"
+                >
+                <?php if (isset($error['username'])): ?>
+                    <div class="error-message"><?php echo $error['username']; ?></div>
+                <?php endif; ?>
+            </div>
 
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" placeholder="e.g. example@mail.com">
-                </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        placeholder="e.g. example@mail.com"
+                        value="<?= isset($_POST['email']) ? htmlspecialchars($_POST['email']) : ''; ?>"
+                >
+                <?php if (isset($error['email'])): ?>
+                    <div class="error-message"><?php echo $error['email']; ?></div>
+                <?php endif; ?>
+            </div>
 
-                <div class="form-group">
-                    <label for="password">Password</label>
-                    <input type="text" id="password" class="dropdown">
-                </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                >
+                <?php if (isset($error['password'])): ?>
+                    <div class="error-message"><?php echo $error['password']; ?></div>
+                <?php endif; ?>
+            </div>
 
-                <div class="checkbox-group">
-                    <input type="checkbox" id="terms">
-                    <label for="terms">I agree to the <a href="./conditions.php">Terms & Conditions</a></label>
-                </div>
+            <div class="checkbox-group">
+                <input
+                        type="checkbox"
+                        id="terms"
+                        name="terms"
+                    <?= isset($_POST['terms']) ? 'checked' : ''; ?>
+                >
+                <label for="terms">I agree to the <a href="./conditions.php">Terms & Conditions</a></label>
+                <?php if (isset($error['terms'])): ?>
+                    <div class="error-message"><?php echo $error['terms']; ?></div>
+                <?php endif; ?>
+            </div>
 
-                <button type="submit">Sign In</button>
-            </form>
-        </div>
-        <div class="image-section">
-            <img src="./pics/welcome.jpg" alt="Person reading with cat illustration" class="illustration">
-        </div>
+            <button type="submit">Sign In</button>
+        </form>
     </div>
+    <div class="image-section">
+        <img src="./pics/welcome.jpg" alt="Person reading with cat illustration" class="illustration">
+    </div>
+</div>
 </body>
 </html>

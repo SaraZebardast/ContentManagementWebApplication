@@ -91,7 +91,7 @@ $editorsNo = $editorQuery->rowCount();
 
         .main-content {
             flex: 1;
-            margin-left: 160px;
+            margin-left: 250px;
             padding: 20px;
         }
 

@@ -7,8 +7,6 @@ require "db.php";
 $success = false;
 
 // Validation for the form
-require "db.php";
-
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     extract($_POST); // $username, $email, $password, $userType
 
@@ -108,7 +106,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         .main-content {
             flex: 1;
-            margin-left: 50px;
+            margin-left: 250px;
             padding: 20px;
         }
 

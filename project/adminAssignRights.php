@@ -1,3 +1,22 @@
+<?php
+
+// Imports
+global $db;
+require "db.php";
+
+// Fill the users dropdown from the database
+$stmtUser = $db->prepare("SELECT * FROM users WHERE type IN ('editor', 'content_creator') ORDER BY username");
+$stmtUser->execute();
+$Users = $stmtUser->fetchAll();
+
+// Get the selected user ID if form was submitted
+$selectedUserId = isset($_POST['user']) ? $_POST['user'] : '';
+
+//
+
+
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -218,14 +237,19 @@
         </div>
 
         <div class="form-container">
-            <form action="assign_rights.php" method="POST">
+            <form action="" method="POST">
                 <div class="form-group">
                     <label for="user">Select User</label>
                     <select id="user" name="user" required>
                         <option value="">Choose a user</option>
-                        <option value="1">John Doe (Content Creator)</option>
-                        <option value="2">Jane Smith (Editor)</option>
-                        <option value="3">Mike Johnson (Content Creator)</option>
+
+                        <?php
+                        foreach ($Users as $u) {
+                            $selected = ($selectedUserId == $u['id']) ? 'selected' : '';
+                            echo '<option value="' . $u['id'] . '" ' . $selected . '>' . $u['username'] . '</option>';
+                        }
+                        ?>
+
                     </select>
                 </div>
 

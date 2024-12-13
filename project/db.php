@@ -11,5 +11,3 @@ try {
     echo "<p> Connection Error".$ex->getMessage()."<p>";
     exit ;
 }
-
-echo "<p>db connection is provided</p>";
