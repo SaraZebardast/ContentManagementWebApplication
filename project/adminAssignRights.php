@@ -4,6 +4,10 @@
 global $db;
 require "db.php";
 
+// Variables
+$success = false;
+$error = [];
+
 // Fill the users dropdown from the database
 $stmtUser = $db->prepare("SELECT * FROM users WHERE type IN ('editor', 'content_creator') ORDER BY username");
 $stmtUser->execute();
@@ -12,9 +16,22 @@ $Users = $stmtUser->fetchAll();
 // Get the selected user ID if form was submitted
 $selectedUserId = isset($_POST['user']) ? $_POST['user'] : '';
 
-//
+// Validation for the form
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    // Validate user selection
+    if (!isset($_POST['user']) || empty($_POST['user'])) {
+        $error['user'] = "Please select a user";
+    }
+
+    // TODO Validate permissions (at least one must be selected)
 
 
+    // If no errors, process the form
+    if (empty($error)) {
+        // TODO: Update permissions in database
+        $success = true;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -190,6 +207,25 @@ $selectedUserId = isset($_POST['user']) ? $_POST['user'] : '';
             border-top: 1px solid #362a55;
             padding-top: 20px;
         }
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .form-group select.error {
+            border-color: #dc3545;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid #c3e6cb;
+        }
     </style>
 </head>
 <body>
@@ -238,6 +274,13 @@ $selectedUserId = isset($_POST['user']) ? $_POST['user'] : '';
 
         <div class="form-container">
             <form action="" method="POST">
+
+                <?php if ($success): ?>
+                    <div class="success-message">
+                        Permissions updated successfully!
+                    </div>
+                <?php endif; ?>
+
                 <div class="form-group">
                     <label for="user">Select User</label>
                     <select id="user" name="user" required>
@@ -251,6 +294,11 @@ $selectedUserId = isset($_POST['user']) ? $_POST['user'] : '';
                         ?>
 
                     </select>
+                    <?php
+                        if (isset($error['user'])) {
+                            echo "<div class='error-message'>{$error['user']}</div>";
+                        }
+                    ?>
                 </div>
 
                 <div class="permissions-list">
