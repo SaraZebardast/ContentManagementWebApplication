@@ -107,6 +107,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            text-decoration: none;
         }
 
         .btn-outline:hover {
@@ -174,63 +175,63 @@
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="logo">Bulletin Board</div>
-        <div class="nav-actions">
-            <div class="nav-links">
-                <a href="api/all-content.php" class="nav-link">JSON API</a>
-            </div>
-            <button class="btn btn-outline">
-                <i class="fas fa-user"></i>
-                Login
-            </button>
+<nav class="navbar">
+    <div class="logo">Bulletin Board</div>
+    <div class="nav-actions">
+        <div class="nav-links">
+            <a href="api/all-content.php" class="nav-link">JSON API</a>
         </div>
-    </nav>
+        <a href="./login.php" class="btn btn-outline">
+            <i class="fas fa-user"></i>
+            Login
+        </a>
+    </div>
+</nav>
 
-    <div class="search-container">
-        <div class="search-box">
-            <input type="text" class="search-input" placeholder="Search content...">
-            <button class="btn btn-primary">Search</button>
+<div class="search-container">
+    <div class="search-box">
+        <input type="text" class="search-input" placeholder="Search content...">
+        <button class="btn btn-primary">Search</button>
+    </div>
+</div>
+
+<div class="content-grid">
+    <!-- Example Content Cards -->
+    <div class="content-card">
+        <img src="/api/placeholder/300/200" alt="Content" class="content-image">
+        <div class="content-info">
+            <div class="content-meta">
+                <span><i class="fas fa-user"></i> John Doe</span>
+                <span class="status-badge">Approved</span>
+            </div>
+            <div class="content-title">Getting Started with Web Development</div>
+            <p>Learn the basics of web development with this comprehensive guide...</p>
         </div>
     </div>
 
-    <div class="content-grid">
-        <!-- Example Content Cards -->
-        <div class="content-card">
-            <img src="/api/placeholder/300/200" alt="Content" class="content-image">
-            <div class="content-info">
-                <div class="content-meta">
-                    <span><i class="fas fa-user"></i> John Doe</span>
-                    <span class="status-badge">Approved</span>
-                </div>
-                <div class="content-title">Getting Started with Web Development</div>
-                <p>Learn the basics of web development with this comprehensive guide...</p>
+    <div class="content-card">
+        <img src="/api/placeholder/300/200" alt="Content" class="content-image">
+        <div class="content-info">
+            <div class="content-meta">
+                <span><i class="fas fa-user"></i> Jane Smith</span>
+                <span class="status-badge">Approved</span>
             </div>
-        </div>
-
-        <div class="content-card">
-            <img src="/api/placeholder/300/200" alt="Content" class="content-image">
-            <div class="content-info">
-                <div class="content-meta">
-                    <span><i class="fas fa-user"></i> Jane Smith</span>
-                    <span class="status-badge">Approved</span>
-                </div>
-                <div class="content-title">Design Principles for Beginners</div>
-                <p>Explore the fundamental principles of good design and how to apply them...</p>
-            </div>
-        </div>
-
-        <div class="content-card">
-            <img src="/api/placeholder/300/200" alt="Content" class="content-image">
-            <div class="content-info">
-                <div class="content-meta">
-                    <span><i class="fas fa-user"></i> Mike Johnson</span>
-                    <span class="status-badge">Approved</span>
-                </div>
-                <div class="content-title">Understanding CSS Grid</div>
-                <p>Master CSS Grid layout with practical examples and tips...</p>
-            </div>
+            <div class="content-title">Design Principles for Beginners</div>
+            <p>Explore the fundamental principles of good design and how to apply them...</p>
         </div>
     </div>
+
+    <div class="content-card">
+        <img src="/api/placeholder/300/200" alt="Content" class="content-image">
+        <div class="content-info">
+            <div class="content-meta">
+                <span><i class="fas fa-user"></i> Mike Johnson</span>
+                <span class="status-badge">Approved</span>
+            </div>
+            <div class="content-title">Understanding CSS Grid</div>
+            <p>Master CSS Grid layout with practical examples and tips...</p>
+        </div>
+    </div>
+</div>
 </body>
 </html>
