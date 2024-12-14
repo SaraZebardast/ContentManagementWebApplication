@@ -9,28 +9,81 @@ $success = false;
 $error = [];
 
 // Fill the users dropdown from the database
-$stmtUser = $db->prepare("SELECT * FROM users WHERE type IN ('editor', 'content_creator') ORDER BY username");
+$stmtUser = $db->prepare("SELECT * FROM users WHERE type IN ('content_creator') ORDER BY username");
 $stmtUser->execute();
 $Users = $stmtUser->fetchAll();
 
 // Get the selected user ID if form was submitted
 $selectedUserId = isset($_POST['user']) ? $_POST['user'] : '';
 
+// Fetch existing permissions if user is selected
+$existingPermissions = null;
+if ($selectedUserId) {
+    $stmtPerms = $db->prepare("SELECT * FROM user_permissions WHERE user_id = ?");
+    $stmtPerms->execute([$selectedUserId]);
+    $existingPermissions = $stmtPerms->fetch();
+}
+
 // Validation for the form
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
+
     // Validate user selection
     if (!isset($_POST['user']) || empty($_POST['user'])) {
         $error['user'] = "Please select a user";
     }
 
-    // TODO Validate permissions (at least one must be selected)
+    // Convert checkbox values to binary (0/1)
+    $permissions = [
+        'can_search_own_content' => isset($_POST['can_search_own_content']) ? 1 : 0,
+        'can_view_others_content' => isset($_POST['can_view_others_content']) ? 1 : 0,
+        'can_add_content' => isset($_POST['can_add_content']) ? 1 : 0,
+        'can_edit_content' => isset($_POST['can_edit_content']) ? 1 : 0,
+        'can_delete_content' => isset($_POST['can_delete_content']) ? 1 : 0
+    ];
 
+    // Check if the user already has permissions
+    $stmtCheck = $db->prepare("SELECT id FROM user_permissions WHERE user_id = ?");
+    $stmtCheck->execute([$selectedUserId]);
+    $exists = $stmtCheck->fetch();
 
-    // If no errors, process the form
-    if (empty($error)) {
-        // TODO: Update permissions in database
-        $success = true;
+    if ($exists) {
+        // Update existing permissions
+        $stmtUpdate = $db->prepare("
+                UPDATE user_permissions 
+                SET 
+                    can_search_own_content = :can_search_own_content,
+                    can_view_others_content = :can_view_others_content,
+                    can_add_content = :can_add_content,
+                    can_edit_content = :can_edit_content,
+                    can_delete_content = :can_delete_content
+                WHERE user_id = :user_id
+            ");
+        $stmtUpdate->execute(array_merge($permissions, ['user_id' => $selectedUserId]));
+    } else {
+        // Insert new permissions
+        $stmtInsert = $db->prepare("
+                INSERT INTO user_permissions 
+                (user_id, can_search_own_content, can_view_others_content, can_add_content, can_edit_content, can_delete_content)
+                VALUES 
+                (:user_id, :can_search_own_content, :can_view_others_content, :can_add_content, :can_edit_content, :can_delete_content)
+            ");
+        $stmtInsert->execute(array_merge($permissions, ['user_id' => $selectedUserId]));
     }
+    $success = true;
+}
+
+// Fixing Sticky Behavior
+if ($success) {
+    $stmtPerms = $db->prepare("SELECT * FROM user_permissions WHERE user_id = ?");
+    $stmtPerms->execute([$selectedUserId]);
+    $currentPermissions = $stmtPerms->fetch();
+}
+
+// Or when user is selected in dropdown
+elseif ($selectedUserId) {
+    $stmtPerms = $db->prepare("SELECT * FROM user_permissions WHERE user_id = ?");
+    $stmtPerms->execute([$selectedUserId]);
+    $currentPermissions = $stmtPerms->fetch();
 }
 ?>
 
@@ -303,33 +356,48 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                 <div class="permissions-list">
                     <div class="permission-item">
-                        <input type="checkbox" id="view_content" name="permissions[]" value="view_content">
-                        <label for="view_content">View Content</label>
-                    </div>
-                    
-                    <div class="permission-item">
-                        <input type="checkbox" id="create_content" name="permissions[]" value="create_content">
-                        <label for="create_content">Create Content</label>
-                    </div>
-
-                    <div class="permission-item">
-                        <input type="checkbox" id="edit_content" name="permissions[]" value="edit_content">
-                        <label for="edit_content">Edit Content</label>
+                        <input type="checkbox"
+                               id="can_search_own_content"
+                               name="can_search_own_content"
+                               value="1"
+                            <?php echo (isset($currentPermissions['can_search_own_content']) && $currentPermissions['can_search_own_content']) ? 'checked' : ''; ?>>
+                        <label for="can_search_own_content">Search Own Content</label>
                     </div>
 
                     <div class="permission-item">
-                        <input type="checkbox" id="delete_content" name="permissions[]" value="delete_content">
-                        <label for="delete_content">Delete Content</label>
+                        <input type="checkbox"
+                               id="can_view_others_content"
+                               name="can_view_others_content"
+                               value="1"
+                            <?php echo (isset($currentPermissions['can_view_others_content']) && $currentPermissions['can_view_others_content']) ? 'checked' : ''; ?>>
+                        <label for="can_view_others_content">View Others' Content</label>
                     </div>
 
                     <div class="permission-item">
-                        <input type="checkbox" id="approve_content" name="permissions[]" value="approve_content">
-                        <label for="approve_content">Approve Content</label>
+                        <input type="checkbox"
+                               id="can_add_content"
+                               name="can_add_content"
+                               value="1"
+                            <?php echo (isset($currentPermissions['can_add_content']) && $currentPermissions['can_add_content']) ? 'checked' : ''; ?>>
+                        <label for="can_add_content">Add Content</label>
                     </div>
 
                     <div class="permission-item">
-                        <input type="checkbox" id="manage_comments" name="permissions[]" value="manage_comments">
-                        <label for="manage_comments">Manage Comments</label>
+                        <input type="checkbox"
+                               id="can_edit_content"
+                               name="can_edit_content"
+                               value="1"
+                            <?php echo (isset($currentPermissions['can_edit_content']) && $currentPermissions['can_edit_content']) ? 'checked' : ''; ?>>
+                        <label for="can_edit_content">Edit Content</label>
+                    </div>
+
+                    <div class="permission-item">
+                        <input type="checkbox"
+                               id="can_delete_content"
+                               name="can_delete_content"
+                               value="1"
+                            <?php echo (isset($currentPermissions['can_delete_content']) && $currentPermissions['can_delete_content']) ? 'checked' : ''; ?>>
+                        <label for="can_delete_content">Delete Content</label>
                     </div>
                 </div>
 

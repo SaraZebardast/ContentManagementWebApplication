@@ -132,6 +132,31 @@ INSERT INTO `comments` (`id`, `content_id`, `editor_id`, `comment`) VALUES
                                                                         (9, 17, 5, 'Add equipment rental information and costs.'),
                                                                         (10, 20, 9, 'Include food safety guidelines for participants.');
 
+-- Table structure for table `user_permissions`
+DROP TABLE IF EXISTS `user_permissions`;
+CREATE TABLE IF NOT EXISTS `user_permissions` (
+                                                  `id` INT(11) NOT NULL AUTO_INCREMENT,
+    `user_id` INT(11) NOT NULL,
+    `can_search_own_content` BOOLEAN NOT NULL DEFAULT TRUE,
+    `can_view_others_content` BOOLEAN NOT NULL DEFAULT FALSE,
+    `can_add_content` BOOLEAN NOT NULL DEFAULT FALSE,
+    `can_edit_content` BOOLEAN NOT NULL DEFAULT FALSE,
+    `can_delete_content` BOOLEAN NOT NULL DEFAULT FALSE,
+    PRIMARY KEY (`id`),
+    KEY `user_id` (`user_id`),
+    CONSTRAINT `user_permissions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+
+-- Sample data for user_permissions
+INSERT INTO `user_permissions` (`user_id`, `can_search_own_content`, `can_view_others_content`, `can_add_content`, `can_edit_content`, `can_delete_content`)
+VALUES
+    (2, TRUE, TRUE, TRUE, True, TRUE), -- Content Creator Emily
+    (4, False, False, False, FALSE, False), -- Content Creator Alice
+    (7, TRUE, TRUE, TRUE, FALSE, TRUE), -- Content Creator James
+    (8, TRUE, TRUE, TRUE, FALSE, TRUE), -- Content Creator Liu
+    (10, TRUE, TRUE, TRUE, FALSE, TRUE); -- Content Creator David
+
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
