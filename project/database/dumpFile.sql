@@ -41,17 +41,16 @@ CREATE TABLE IF NOT EXISTS `users` (
 --
 
 INSERT INTO `users` (`id`, `username`, `password`, `email`, `type`) VALUES
-                                                                        (1, 'john', 'admin123', 'john.smith@university.edu', 'admin'),
-                                                                        (2, 'emily', 'sc123', 'emily.miller@university.edu', 'content_creator'),
-                                                                        (3, 'robert', 'fr123', 'robert.wilson@university.edu', 'editor'),
-                                                                        (4, 'alice', 'sports123', 'alice.lee@university.edu', 'content_creator'),
-                                                                        (5, 'miguel', 'academic123', 'miguel.garcia@university.edu', 'editor'),
-                                                                        (6, 'sarah', 'it123', 'sarah.patel@university.edu', 'admin'),
-                                                                        (7, 'james', 'lib123', 'james.chen@university.edu', 'content_creator'),
-                                                                        (8, 'liu', 'science123', 'liu.zhang@university.edu', 'content_creator'),
-                                                                        (9, 'karen', 'sa123', 'karen.thomas@university.edu', 'editor'),
-                                                                        (10, 'david', 'events123', 'david.kim@university.edu', 'content_creator');
-
+                                                                        (1, 'john', '$2y$10$lN.KSTr2BJJ73qFTCHpRyunhSBL4n5K0i7yWGRhgNKZpChvMuXS2C', 'john.smith@university.edu', 'admin'),
+                                                                        (2, 'emily', '$2y$10$Fe3x9q0h9WGonqxogC8dAO6lzLeq1c3g32k8/rD4i7L.hdun05zPK', 'emily.miller@university.edu', 'content_creator'),
+                                                                        (3, 'robert', '$2y$10$yh/sf7cCS7kMrJG4WV4xTOfGLv.VnJdNCkG.ibMvJvx28SaGOlMYq', 'robert.wilson@university.edu', 'editor'),
+                                                                        (4, 'alice', '$2y$10$JzFYpoz8FTTxL132FFYwku4usjzYR1JU4H6OHy6VSrRLfdn.liQFa', 'alice.lee@university.edu', 'content_creator'),
+                                                                        (5, 'miguel', '$2y$10$D.qTS1KozsLZLb/dpufhauTPcSb85Jxy0den1HC3aOADkP6QN9g5C', 'miguel.garcia@university.edu', 'editor'),
+                                                                        (6, 'sarah', '$2y$10$SRyAP3qevWxXehcuPIOAk.FCXfXK8LxKxjZzZFaqKPCWmM7v9hpki', 'sarah.patel@university.edu', 'admin'),
+                                                                        (7, 'james', '$2y$10$sRsuNMceFEdcgLjIycBag.PeOtk6o9rV3JEmNHGvdUVLZsbF3qEw2', 'james.chen@university.edu', 'content_creator'),
+                                                                        (8, 'liu', '$2y$10$B.q/NAG4H57jiQtXKcF3pO2JrlDxawL6vtyZT7.H0FZWUrbmbOhMm', 'liu.zhang@university.edu', 'content_creator'),
+                                                                        (9, 'karen', '$2y$10$rcPe.XfJSopFHS1xZXKdkeWSshTQd8FWZWUvRzweUEOaITltr14Li', 'karen.thomas@university.edu', 'editor'),
+                                                                        (10, 'david', '$2y$10$NMxaRtXkV7lfrKs1vh0KNO2DeOEqQBWUfm.AwyJpfyfeaZ9ooTsa6', 'david.kim@university.edu', 'content_creator');
 -- --------------------------------------------------------
 
 --

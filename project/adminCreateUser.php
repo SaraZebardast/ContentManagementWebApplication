@@ -35,8 +35,20 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     if (empty($error)) {
         // TODO Add the user to the databse
-        //show success message
-        $success = true;
+        $check = $db->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
+        $check->execute([$username, $email]);
+
+        if ($check->rowCount() > 0) {
+            $error['database'] = "Username or email already exists";
+        } else {
+            // Hash the password and insert user
+            $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
+
+            $stmt = $db->prepare("INSERT INTO users (username, email, password, type) VALUES (?, ?, ?, ?)");
+            $stmt->execute([$username, $email, $hashedPassword, $userType]);
+
+            $success = true;
+        }
     }
 }
 
