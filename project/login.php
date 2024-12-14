@@ -2,8 +2,16 @@
 // Imports
 require "db.php";
 
+// Start the session for the User
+session_start();
+
 // Variables
 $success = false;
+$redirects = [
+    'admin' => './adminDashboard.php',
+    'editor' => './editorDashboard.php',
+    'content_creator' => './contentCreatorDashboard.php'
+];
 
 // Validation for the form
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -33,7 +41,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     if (empty($error)) {
-        // TODO: Add login logic here
+
+        // Prepare the SQL statement
+        $stmt = $db->prepare("SELECT id, username, password, type FROM users WHERE email = ? LIMIT 1");
+        $stmt->execute([$email]);
+        $user = $stmt->fetch();
+
+        if ($user && password_verify($password, $user['password'])) {
+
+            // Store user data in session
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['user_type'] = $user['type'];
+            $_SESSION['last_activity'] = time();
+
+            // Redirect to dashboard
+            header("Location: " . $redirects[$user['type']]);
+            exit;
+        } else {
+            $error['auth'] = "Invalid email or password";
+        }
+
         $success = true;
     }
 }
