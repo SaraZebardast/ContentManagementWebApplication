@@ -235,7 +235,7 @@ $contents = $stmt->fetchAll();
     <div class="logo">Bulletin Board</div>
     <div class="nav-actions">
         <div class="nav-links">
-            <a href="api/allContentJson.php" class="nav-link">JSON API</a>
+            <a href="./allContentJson.php" class="nav-link">JSON API</a>
         </div>
         <a href="./login.php" class="btn btn-outline">
             <i class="fas fa-user"></i>
