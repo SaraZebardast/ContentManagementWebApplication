@@ -246,7 +246,7 @@
                 </a>
             </li>
             <li>
-                <a href="api/creator-content.php" class="nav-item">
+                <a href="./contentCreatorJson.php" class="nav-item">
                     <i class="fas fa-code"></i>
                     JSON API
                 </a>
