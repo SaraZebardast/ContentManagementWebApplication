@@ -3,13 +3,7 @@
 global $db;
 require "db.php";
 
-// Set proper JSON header
-header('Content-Type: application/json');
-
-$sql = "SELECT content.*, users.username 
-        FROM content 
-        JOIN users ON content.creator_id = users.id 
-        WHERE content.status = 'approved'";
+$sql = "SELECT * FROM content";
 
 $stmt = $db->prepare($sql);
 $stmt->execute();
