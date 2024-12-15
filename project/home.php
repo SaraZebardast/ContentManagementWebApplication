@@ -1,3 +1,37 @@
+<?php
+// Imports
+require "db.php";
+
+// Variables
+global $db;
+
+// Get search term if any
+$search = isset($_GET['search']) ? $_GET['search'] : '';
+
+// Simple query with optional search
+$sql = "SELECT content.*, users.username 
+        FROM content 
+        JOIN users ON content.creator_id = users.id 
+        WHERE content.status = 'approved'";
+
+// Add search if term entered
+if ($search) {
+    $sql .= " AND (title LIKE ? OR description LIKE ?)";
+}
+
+$stmt = $db->prepare($sql);
+
+// Execute with or without search params
+if ($search) {
+    $searchTerm = "%$search%";
+    $stmt->execute([$searchTerm, $searchTerm]);
+} else {
+    $stmt->execute();
+}
+
+$contents = $stmt->fetchAll();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -121,7 +155,7 @@
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
             padding: 20px;
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
         }
 
@@ -172,6 +206,28 @@
             background: #2d8a61;
             color: white;
         }
+        .content-image-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 66.67%; /* Creates a 3:2 aspect ratio */
+            overflow: hidden;
+        }
+
+        .content-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }
+        .content-image {
+            width: 100%;
+            height: auto; /* removes fixed height */
+            max-height: 200px; /* optional: sets maximum height */
+            object-fit: contain;
+        }
     </style>
 </head>
 <body>
@@ -179,7 +235,7 @@
     <div class="logo">Bulletin Board</div>
     <div class="nav-actions">
         <div class="nav-links">
-            <a href="api/all-content.php" class="nav-link">JSON API</a>
+            <a href="api/allContentJson.php" class="nav-link">JSON API</a>
         </div>
         <a href="./login.php" class="btn btn-outline">
             <i class="fas fa-user"></i>
@@ -189,48 +245,35 @@
 </nav>
 
 <div class="search-container">
-    <div class="search-box">
-        <input type="text" class="search-input" placeholder="Search content...">
-        <button class="btn btn-primary">Search</button>
-    </div>
+    <form method="GET" action="" class="search-box">
+        <input type="text"
+               name="search"
+               class="search-input"
+               placeholder="Search content..."
+               value="<?php echo htmlspecialchars($search); ?>">
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
 </div>
 
 <div class="content-grid">
-    <!-- Example Content Cards -->
-    <div class="content-card">
-        <img src="/api/placeholder/300/200" alt="Content" class="content-image">
-        <div class="content-info">
-            <div class="content-meta">
-                <span><i class="fas fa-user"></i> John Doe</span>
-                <span class="status-badge">Approved</span>
+    <!-- Content Cards -->
+    <div class="content-grid">
+        <?php foreach ($contents as $content):
+            echo "<div class='content-card'>
+            <div class='content-image-container'>
+                <img src='{$content['image_path']}' 
+                     alt='{$content['title']}' 
+                     class='content-image'>
             </div>
-            <div class="content-title">Getting Started with Web Development</div>
-            <p>Learn the basics of web development with this comprehensive guide...</p>
-        </div>
-    </div>
-
-    <div class="content-card">
-        <img src="/api/placeholder/300/200" alt="Content" class="content-image">
-        <div class="content-info">
-            <div class="content-meta">
-                <span><i class="fas fa-user"></i> Jane Smith</span>
-                <span class="status-badge">Approved</span>
+            <div class='content-info'>
+                <div class='content-meta'>
+                    <span><i class='fas fa-user'></i> {$content['username']}</span>
+                </div>
+                <div class='content-title'>{$content['title']}</div>
+                <p>{$content['description']}</p>
             </div>
-            <div class="content-title">Design Principles for Beginners</div>
-            <p>Explore the fundamental principles of good design and how to apply them...</p>
-        </div>
-    </div>
-
-    <div class="content-card">
-        <img src="/api/placeholder/300/200" alt="Content" class="content-image">
-        <div class="content-info">
-            <div class="content-meta">
-                <span><i class="fas fa-user"></i> Mike Johnson</span>
-                <span class="status-badge">Approved</span>
-            </div>
-            <div class="content-title">Understanding CSS Grid</div>
-            <p>Master CSS Grid layout with practical examples and tips...</p>
-        </div>
+        </div>";
+        endforeach; ?>
     </div>
 </div>
 </body>
