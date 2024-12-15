@@ -1,3 +1,21 @@
+<?php
+// Start the session for the User
+session_start();
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'editor') {
+    header("Location:login.php");
+    exit();
+}
+
+// Imports
+require "db.php";
+
+// Variables
+$editorName = $_SESSION['username']; // Get name from session
+global $db;
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -282,7 +300,7 @@
             <h1>Editor Dashboard</h1>
             <div class="user-info">
                 <i class="fas fa-user-circle"></i>
-                <span>Editor Name</span>
+                <span> <?= $editorName ?></span>
             </div>
         </div>
 

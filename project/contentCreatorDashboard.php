@@ -1,3 +1,21 @@
+<?php
+// Start the session for the User
+session_start();
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'content_creator') {
+    header("Location:login.php");
+    exit();
+}
+
+// Imports
+require "db.php";
+
+// Variables
+$CCName = $_SESSION['username']; // Get name from session
+global $db;
+
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -274,7 +292,7 @@
             </div>
             <div class="user-info">
                 <i class="fas fa-user-circle"></i>
-                <span>John Doe</span>
+                <span> <?= $CCName ?></span>
             </div>
         </div>
 
