@@ -1,14 +1,20 @@
 <?php
+// Start the session for the User
+session_start();
 
-//TODO implement session
+// Check if user is logged in
+if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'admin') {
+    header("Location:login.php");
+    exit();
+}
 
 // Imports
 require "db.php";
 
 // Variables
+$adminName = $_SESSION['username']; // Get admin name from session
 $userType = ["admin","content_creator", "editor"];
 global $db;
-$adminName = "Sara"; //TODO this name should be dynamic
 
 // Access all users
 $rs = $db->query("select * from users") ;
@@ -181,7 +187,7 @@ $editorsNo = $editorQuery->rowCount();
                 </a>
             </li>
             <li class="logout-link">
-                <a href="logout.html" class="nav-item">
+                <a href="logout.php" class="nav-item">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
                 </a>

@@ -1,4 +1,6 @@
 <?php
+// Start the session for the User
+session_start();
 
 // Imports
 global $db;
@@ -7,6 +9,7 @@ require "db.php";
 // Variables
 $success = false;
 $error = [];
+$adminName = $_SESSION['username']; // Get admin name from session
 
 // Fill the users dropdown from the database
 $stmtUser = $db->prepare("SELECT * FROM users WHERE type IN ('content_creator') ORDER BY username");
@@ -307,7 +310,7 @@ elseif ($selectedUserId) {
                 </a>
             </li>
             <li class="logout-link">
-                <a href="logout.html" class="nav-item">
+                <a href="logout.php" class="nav-item">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
                 </a>
@@ -321,7 +324,7 @@ elseif ($selectedUserId) {
             <h1>Assign User Rights</h1>
             <div class="user-info">
                 <i class="fas fa-user-circle"></i>
-                <span>Welcome, Admin</span>
+                <span>Welcome, Admin <?= $adminName ?> </span>
             </div>
         </div>
 

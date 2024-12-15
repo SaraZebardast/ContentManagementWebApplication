@@ -1,10 +1,13 @@
 <?php
+// Start the session for the User
+session_start();
 
 // Imports
 require "db.php";
 
 // Variables
 $success = false;
+$adminName = $_SESSION['username']; // Get admin name from session
 
 // Validation for the form
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
@@ -34,7 +37,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     if (empty($error)) {
-        // TODO Add the user to the databse
         $check = $db->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
         $check->execute([$username, $email]);
 
@@ -245,7 +247,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 </a>
             </li>
             <li class="logout-link">
-                <a href="logout.html" class="nav-item">
+                <a href="logout.php" class="nav-item">
                     <i class="fas fa-sign-out-alt"></i>
                     Logout
                 </a>
@@ -259,7 +261,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             <h1>Create New User</h1>
             <div class="user-info">
                 <i class="fas fa-user-circle"></i>
-                <span>Welcome, Admin</span>
+                <span>Welcome, Admin <?= $adminName ?> </span>
             </div>
         </div>
 

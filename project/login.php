@@ -52,6 +52,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             // Store user data in session
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_type'] = $user['type'];
+            $_SESSION['username'] = $user['username'];
             $_SESSION['last_activity'] = time();
 
             // Redirect to dashboard
@@ -60,7 +61,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         } else {
             $error['auth'] = "Invalid email or password";
         }
-
         $success = true;
     }
 }
