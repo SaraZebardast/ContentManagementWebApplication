@@ -15,6 +15,20 @@ require "db.php";
 $CCName = $_SESSION['username']; // Get name from session
 global $db;
 
+//TODO Display the content of the content creator (similar to the home page implementation) (make the design responsive)
+
+//TODO Delete the content button should be functional
+
+//TODO Search the content should be working (again home has the same functionality for the point of refferance)
+
+//TODO Filter the content based on approved or not approved
+
+//TODO if there exists a comment for the content display it  (from comments table)
+
+//TODO get the content of the content creator in question and display the json of it when clicked on the button JSON API
+
+//TODO make the edit button work (it will redirect to another page edit.php)
+
 ?>
 <!DOCTYPE html>
 <html lang="en">

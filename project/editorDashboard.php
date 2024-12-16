@@ -15,6 +15,16 @@ require "db.php";
 $editorName = $_SESSION['username']; // Get name from session
 global $db;
 
+//TODO display content of the creators (exactly like home implementation)
+
+//TODO the approve button functionality
+
+//TODO the delete button should delete the content from the database entirely
+
+//TODO submit commit functionality should update UI and add the comment to the comments database
+
+//TODO Search should work (both)
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
