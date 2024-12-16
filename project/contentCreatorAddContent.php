@@ -105,7 +105,8 @@
         }
 
         .form-group input[type="text"],
-        .form-group textarea {
+        .form-group textarea,
+        .form-group select {
             width: 100%;
             padding: 12px;
             border: 1px solid #ddd;
@@ -114,7 +115,8 @@
         }
 
         .form-group input[type="text"]:focus,
-        .form-group textarea:focus {
+        .form-group textarea:focus,
+        .form-group select:focus {
             outline: none;
             border-color: #231942;
         }
@@ -198,60 +200,71 @@
     </style>
 </head>
 <body>
-    <!-- Sidebar -->
-    <nav class="sidebar">
-        <div class="logo">
-            Content Creator
-        </div>
-        <ul class="nav-links">
-            <li>
-                <a href="logout.php" class="nav-item">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Logout
-                </a>
-            </li>
-        </ul>
-    </nav>
+<!-- Sidebar -->
+<nav class="sidebar">
+    <div class="logo">
+        Content Creator
+    </div>
+    <ul class="nav-links">
+        <li>
+            <a href="logout.php" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                Logout
+            </a>
+        </li>
+    </ul>
+</nav>
 
-    <!-- Main Content -->
-    <div class="main-content">
-        <div class="header">
-            <h1>Create New Content</h1>
-            <div class="user-info">
-                <i class="fas fa-user-circle"></i>
-                <span>John Doe</span>
-            </div>
-        </div>
-
-        <div class="form-container">
-            <form action="save_content.php" method="POST" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="title">Title</label>
-                    <input type="text" id="title" name="title" required placeholder="Enter content title">
-                </div>
-
-                <div class="form-group">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description" required placeholder="Enter content description"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>Image</label>
-                    <label for="image" class="image-upload">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <p>Click to upload image</p>
-                        <p class="small">Supported formats: JPG, PNG, GIF</p>
-                    </label>
-                    <input type="file" id="image" name="image" accept="image/*" required>
-                    <img id="preview" class="image-preview">
-                </div>
-
-                <div class="btn-container">
-                    <button type="button" onclick="window.location.href='contentCreatorDashboard.php'" class="btn btn-secondary">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create Content</button>
-                </div>
-            </form>
+<!-- Main Content -->
+<div class="main-content">
+    <div class="header">
+        <h1>Create New Content</h1>
+        <div class="user-info">
+            <i class="fas fa-user-circle"></i>
+            <span>John Doe</span>
         </div>
     </div>
+
+    <div class="form-container">
+        <form action="save_content.php" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" id="title" name="title" required placeholder="Enter content title">
+            </div>
+
+            <div class="form-group">
+                <label for="category">Category</label>
+                <select id="category" name="category" required>
+                    <option value="">Select a category</option>
+                    <option value="events">Events</option>
+                    <option value="sports">Sports</option>
+                    <option value="announcement">Announcement</option>
+                    <option value="academic">Academic</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" required placeholder="Enter content description"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Image</label>
+                <label for="image" class="image-upload">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Click to upload image</p>
+                    <p class="small">Supported formats: JPG, PNG, GIF</p>
+                </label>
+                <input type="file" id="image" name="image" accept="image/*" required>
+                <img id="preview" class="image-preview">
+            </div>
+
+            <div class="btn-container">
+                <button type="button" onclick="window.location.href='contentCreatorDashboard.php'" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Content</button>
+            </div>
+        </form>
+    </div>
+</div>
 </body>
 </html>
