@@ -256,6 +256,9 @@ global $db;
         .btn.delete-btn:hover {
             background: #c82333;
         }
+        a {
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
@@ -306,7 +309,7 @@ global $db;
             </div>
             <div class="user-info">
                 <i class="fas fa-user-circle"></i>
-                <span> <?= $CCName ?></span>
+                <span><?= $CCName ?></span>
             </div>
         </div>
 
@@ -325,8 +328,8 @@ global $db;
                         </div>
                     </div>
                     <div class="content-actions">
-                        <button class="btn">Edit</button>
-                        <button class="btn delete-btn">Delete</button>
+                        <a href="edit.php" class="btn">Edit</a>
+                        <a class="btn delete-btn" href="edit.php">Delete</a>
                     </div>
                 </div>
             </div>
@@ -345,8 +348,8 @@ global $db;
                         </div>
                     </div>
                     <div class="content-actions">
-                        <button class="btn">Edit</button>
-                        <button class="btn delete-btn">Delete</button>
+                        <a href="edit.php" class="btn">Edit</a>
+                        <a class="btn delete-btn" href="edit.php">Delete</a>
                     </div>
                 </div>
             </div>

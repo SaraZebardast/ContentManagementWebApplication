@@ -281,6 +281,9 @@ global $db;
         .btn-comment:hover {
             background: #246d4d;
         }
+        a {
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
@@ -347,9 +350,9 @@ global $db;
                     <div class="comment-section">
                         <textarea class="comment-input" placeholder="Add a comment..."></textarea>
                         <div class="action-buttons">
-                            <button class="btn btn-primary">Approve</button>
-                            <button class="btn btn-delete">Delete</button>
-                            <button class="btn btn-comment">Submit Comment</button>
+                            <a href="" class="btn btn-primary">Approve</a>
+                            <a href="" class="btn btn-delete">Delete</a>
+                            <a href="" class="btn btn-comment">Submit Comment</a>
                         </div>
                     </div>
                 </div>
@@ -371,8 +374,8 @@ global $db;
                         <p class="comment"><i class="fas fa-comment"></i> Previously approved with minor edits.</p>
                         <textarea class="comment-input" placeholder="Add a comment..."></textarea>
                         <div class="action-buttons">
-                            <button class="btn btn-delete">Delete</button>
-                            <button class="btn btn-comment">Submit Comment</button>
+                            <a href="" class="btn btn-delete">Delete</a>
+                            <a href="" class="btn btn-comment">Submit Comment</a>
                         </div>
                     </div>
                 </div>
