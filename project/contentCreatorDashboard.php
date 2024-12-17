@@ -19,9 +19,11 @@ global $db;
 
 //TODO Delete the content button should be functional
 
-//TODO Search the content should be working (again home has the same functionality for the point of refferance)
+//TODO Search the content should be working (again home has the same functionality for the point of refferance) *
 
-//TODO Filter the content based on approved or not approved
+//TODO Filter the content based on approved or not approved *
+
+//TODO for both or just one of these two * please use Ajax
 
 //TODO if there exists a comment for the content display it  (from comments table)
 
