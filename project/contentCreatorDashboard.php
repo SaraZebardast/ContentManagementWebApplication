@@ -1,5 +1,4 @@
 <?php
-// Start the session for the User
 session_start();
 
 // Check if user is logged in
@@ -8,30 +7,104 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'content_creator'
     exit();
 }
 
-// Imports
 require "db.php";
 
-// Variables
-$CCName = $_SESSION['username']; // Get name from session
+$CCName = $_SESSION['username']; 
+$contentCreatorId = $_SESSION['user_id']; 
 global $db;
 
-//TODO Display the content of the content creator (similar to the home page implementation) (make the design responsive)
 
-//TODO Delete the content button should be functional
+//Content deletion
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_content_id'])) {
+    $contentId = $_POST['delete_content_id'];
 
-//TODO Search the content should be working (again home has the same functionality for the point of refferance) *
+    $stmt = $db->prepare("DELETE FROM content WHERE id = :id AND creator_id = :creator_id");
+    $stmt->execute([':id' => $contentId, ':creator_id' => $_SESSION['user_id']]);
 
-//TODO Filter the content based on approved or not approved *
+    if ($stmt->rowCount() > 0) {
+        header("Location: contentCreatorDashboard.php?delete=success");
+        exit();
+    } else {
+        header("Location: contentCreatorDashboard.php?delete=failure");
+        exit();
+    }
+}
 
-//TODO for both or just one of these two * please use Ajax
 
-//TODO if there exists a comment for the content display it  (from comments table)
+//Content search
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'search_and_filter') {
+    $searchQuery = $_POST['query'] ?? '';
+    $filter = $_POST['filter'] ?? 'all';
 
-//TODO get the content of the content creator in question and display the json of it when clicked on the button JSON API
+    $searchQuery = '%' . $searchQuery . '%'; 
 
-//TODO make the edit button work (it will redirect to another page edit.php)
+    $query = "SELECT * FROM content WHERE creator_id = :creator_id";
+
+    
+    if ($filter === 'approved') {
+        $query .= " AND status = 'approved'";
+    } elseif ($filter === 'pending') {
+        $query .= " AND status = 'pending'";
+    }
+
+    
+    if (!empty($_POST['query'])) {
+        $query .= " AND (title LIKE :query OR description LIKE :query)";
+    }
+
+    $stmt = $db->prepare($query);
+
+    $params = [':creator_id' => $_SESSION['user_id']];
+    if (!empty($_POST['query'])) {
+        $params[':query'] = $searchQuery;
+    }
+
+    $stmt->execute($params);
+    $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    echo json_encode($results);
+    exit();
+}
+
+//Content filtering
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'filter') {
+    $filter = $_POST['filter'];
+    $stmt = $db->prepare("SELECT * FROM content WHERE creator_id = :creator_id AND approved = :filter");
+    $stmt->execute([':creator_id' => $contentCreatorId, ':filter' => $filter]);
+    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    exit();
+}
+
+//JSON API
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['json_content_id'])) {
+    $contentId = $_GET['json_content_id'];
+    $stmt = $db->prepare("SELECT * FROM content WHERE id = :id AND creator_id = :creator_id");
+    $stmt->execute([':id' => $contentId, ':creator_id' => $contentCreatorId]);
+    echo json_encode($stmt->fetch(PDO::FETCH_ASSOC));
+    exit();
+}
+
+// Fetch and display all content
+$stmt = $db->prepare("SELECT * FROM content WHERE creator_id = :creator_id");
+$stmt->execute([':creator_id' => $contentCreatorId]);
+$contents = $stmt->fetchAll();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'filter') {
+    $filter = $_POST['filter'];
+    $query = "SELECT * FROM content WHERE creator_id = :creator_id";
+    if ($filter === 'approved') {
+        $query .= " AND approved = 1";
+    } elseif ($filter === 'pending') {
+        $query .= " AND approved = 0";
+    }
+    $stmt = $db->prepare($query);
+    $stmt->execute([':creator_id' => $contentCreatorId]);
+    echo json_encode($stmt->fetchAll(PDO::FETCH_ASSOC));
+    exit();
+}
 
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,6 +112,7 @@ global $db;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Content Creator Dashboard</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -262,6 +336,148 @@ global $db;
             text-decoration: none;
         }
     </style>
+    <script>
+
+//search
+$(document).ready(function () {
+   
+    function performSearchAndFilter() {
+        const query = $('.search-input').val().trim(); 
+        const filter = $('.filter-select').val(); 
+
+        // AJAX POST request
+        $.ajax({
+            url: 'contentCreatorDashboard.php',
+            method: 'POST',
+            data: {
+                action: 'search_and_filter',
+                query: query,
+                filter: filter
+            },
+            success: function (response) {
+                console.log('AJAX response:', response);
+
+                try {
+                    const data = JSON.parse(response);
+                    $('.content-grid').empty(); 
+
+                    if (data.length === 0) {
+                        $('.content-grid').append('<p>No results found.</p>');
+                        return;
+                    }
+
+                    data.forEach(content => {
+                        $('.content-grid').append(`
+                            <div class="content-card">
+                                <img src="${content.image_path}" alt="${content.title}" class="content-image">
+                                <div class="content-info">
+                                    <div class="content-title">${content.title}</div>
+                                    <span class="content-status ${content.status === 'approved' ? 'status-approved' : 'status-pending'}">
+                                        ${content.status === 'approved' ? 'Approved' : 'Pending'}
+                                    </span>
+                                    <p>${content.description}</p>
+                                    <div class="content-actions">
+                                        <a href="edit.php?content_id=${content.id}" class="btn">Edit</a>
+                                        <form method="POST" action="" style="display:inline;">
+                                            <input type="hidden" name="delete_content_id" value="${content.id}">
+                                            <button type="submit" class="btn delete-btn">Delete</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        `);
+                    });
+                } catch (err) {
+                    console.error('Error parsing JSON:', err);
+                    alert('Failed to load search results.');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('AJAX Error:', status, error);
+                alert('Error performing search. Please try again.');
+            }
+        });
+    }
+
+    $('#search-btn').on('click', function (e) {
+        e.preventDefault();
+        performSearchAndFilter();
+    });
+
+    $('.filter-select').change(function () {
+        performSearchAndFilter();
+    });
+});
+
+
+//delete-btn
+$(document).on('click', '.delete-btn', function () {
+    const contentId = $(this).data('id');
+    if (confirm('Are you sure you want to delete this content?')) {
+        $.ajax({
+            url: '',
+            type: 'POST',
+            data: { action: 'delete', content_id: contentId },
+            success: function (response) {
+                try {
+                    const result = JSON.parse(response);
+                    if (result.success) {
+                        alert('Content deleted successfully!');
+                        location.reload();
+                    } else {
+                        alert('Error: ' + (result.error || 'Failed to delete content.'));
+                    }
+                } catch (error) {
+                    console.error('Invalid JSON response:', response);
+                    alert('Unexpected error occurred.');
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('AJAX Error:', status, error);
+                alert('Failed to send request. Please try again.');
+            }
+        });
+    }
+});
+
+$('.filter-select').change(function() {
+    const filter = $(this).val();
+    $.post('', { action: 'filter', filter: filter }, function(response) {
+        const data = JSON.parse(response);
+        $('.content-grid').empty();
+        data.forEach(content => {
+            $('.content-grid').append(`
+                <div class="content-card">
+                    <img src="/uploads/${content.image}" alt="Content" class="content-image">
+                    <div class="content-info">
+                        <div class="content-title">${content.title}</div>
+                        <span class="content-status ${content.approved ? 'status-approved' : 'status-pending'}">
+                            ${content.approved ? 'Approved' : 'Pending'}
+                        </span>
+                        <p>${content.description}</p>
+                        <div class="content-actions">
+                            <a href="edit.php?content_id=${content.id}" class="btn">Edit</a>
+                            <button class="btn delete-btn" data-id="<?= $content['id'] ?>">Delete</button>
+
+                        </div>
+                    </div>
+                </div>
+            `);
+        });
+    });
+});
+
+$(document).on('click', '.json-btn', function() {
+    const contentId = $(this).data('id');
+    $.get('', { json_content_id: contentId }, function(response) {
+        alert(JSON.stringify(response));
+    });
+});
+
+        
+
+
+    </script>
 </head>
 <body>
     <!-- Sidebar -->
@@ -307,7 +523,7 @@ global $db;
                     <option value="approved">Approved</option>
                     <option value="pending">Pending</option>
                 </select>
-                <button class="btn">Search</button>
+                <button class="btn" id="search-btn">Search</button>
             </div>
             <div class="user-info">
                 <i class="fas fa-user-circle"></i>
@@ -316,47 +532,39 @@ global $db;
         </div>
 
         <div class="content-grid">
-            <!-- Content Card Example -->
-            <div class="content-card">
-                <img src="/api/placeholder/300/200" alt="Content" class="content-image">
-                <div class="content-info">
-                    <div class="content-title">Article Title</div>
-                    <span class="content-status status-approved">Approved</span>
-                    <p>Short description of the content goes here...</p>
-                    <div class="comments-section">
+    <?php foreach ($contents as $content): ?>
+        <div class="content-card">
+            <img src="<?= htmlspecialchars($content['image_path'] ?? '/api/placeholder/300/200', ENT_QUOTES) ?>" alt="Content" class="content-image">
+            <div class="content-info">
+                <div class="content-title"><?= htmlspecialchars($content['title'] ?? 'Untitled', ENT_QUOTES) ?></div>
+                <span class="content-status <?= isset($content['status']) && $content['status'] === 'approved' ? 'status-approved' : 'status-pending' ?>">
+                    <?= htmlspecialchars(ucfirst($content['status'] ?? 'Pending'), ENT_QUOTES) ?>
+                </span>
+                <p><?= htmlspecialchars($content['description'] ?? 'No description available.', ENT_QUOTES) ?></p>
+                <div class="comments-section">
+                    <?php
+                    $commentStmt = $db->prepare("SELECT * FROM comments WHERE content_id = :content_id");
+                    $commentStmt->execute([':content_id' => $content['id']]);
+                    $comments = $commentStmt->fetchAll(PDO::FETCH_ASSOC);
+                    foreach ($comments as $comment): ?>
                         <div class="comment">
                             <i class="fas fa-comment"></i>
-                            Editor: Great work, approved!
+                            <?= htmlspecialchars($comment['comment'] ?? 'No comment', ENT_QUOTES) ?>
                         </div>
-                    </div>
-                    <div class="content-actions">
-                        <a href="edit.php" class="btn">Edit</a>
-                        <a class="btn delete-btn" href="edit.php">Delete</a>
-                    </div>
+                    <?php endforeach; ?>
                 </div>
+                <div class="content-actions">
+                <a href="edit.php?content_id=<?= $content['id'] ?>" class="btn">Edit</a>
+                <form method="POST" action="contentCreatorDashboard.php" style="display:inline;">
+                    <input type="hidden" name="delete_content_id" value="<?= $content['id'] ?>">
+                    <button type="submit" class="btn delete-btn">Delete</button>
+                </form>
             </div>
-
-            <!-- Pending Content Example -->
-            <div class="content-card">
-                <img src="/api/placeholder/300/200" alt="Content" class="content-image">
-                <div class="content-info">
-                    <div class="content-title">Draft Article</div>
-                    <span class="content-status status-pending">Pending</span>
-                    <p>Another content description example...</p>
-                    <div class="comments-section">
-                        <div class="comment">
-                            <i class="fas fa-comment"></i>
-                            Editor: Please add more details
-                        </div>
-                    </div>
-                    <div class="content-actions">
-                        <a href="edit.php" class="btn">Edit</a>
-                        <a class="btn delete-btn" href="edit.php">Delete</a>
-                    </div>
-                </div>
             </div>
         </div>
-
+    <?php endforeach; ?>
+</div>
+          
         <!-- Add Content Button -->
         <a href="contentCreatorAddContent.php">
             <button class="add-content-btn">
