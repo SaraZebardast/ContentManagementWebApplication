@@ -1,22 +1,49 @@
 <?php
-// Start the session for the User
 session_start();
+global $db;
 
-// Check if user is logged in
 if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'content_creator') {
     header("Location:login.php");
     exit();
 }
 
-// Imports
 require "db.php";
 
-// Variables
-$CCName = $_SESSION['username']; // Get name from session
-global $db;
+$CCName = $_SESSION['username']; 
+$contentId = $_GET['content_id'] ?? null; 
+$title = $img_category = $description = "";
+
+if ($contentId) {
+    $stmt = $db->prepare("SELECT * FROM content WHERE id = :id");
+    $stmt->execute([':id' => $contentId]);
+    $content = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($content) {
+        $title = $content['title'] ?? 'Untitled';
+        $img_category = $content['img_category'] ?? 'general';
+        $description = $content['description'] ?? '';
+    }
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $title = $_POST['title'];
+    $img_category = $_POST['category'];
+    $description = $_POST['description'];
 
 
-//TODO make the form sticky
+    if ($contentId) {
+        $stmt = $db->prepare("UPDATE content SET title = :title, img_category = :img_category, description = :description WHERE id = :id");
+        $stmt->execute([
+            ':title' => $title,
+            ':img_category' => $img_category,
+            ':description' => $description,
+            ':id' => $contentId,
+        ]);
+
+        header("Location: contentCreatorDashboard.php");
+        exit();
+    }
+}
 
 ?>
 
@@ -272,22 +299,23 @@ global $db;
         <form method="POST" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="title">Title</label>
-                <input type="text" id="title" name="title" value="" required>
+                <input type="text" id="title" name="title" value="<?= htmlspecialchars($title, ENT_QUOTES) ?>" required>
             </div>
 
             <div class="form-group">
                 <label for="category">Category</label>
                 <select id="category" name="category" required>
-                    <option value="events">Events</option>
-                    <option value="sports" >Sports</option>
-                    <option value="announcement" >Announcement</option>
-                    <option value="academic" >Academic</option>
+    <option value="events" <?= $img_category === 'events' ? 'selected' : '' ?>>Events</option>
+    <option value="sports" <?= $img_category === 'sports' ? 'selected' : '' ?>>Sports</option>
+    <option value="announcement" <?= $img_category === 'announcement' ? 'selected' : '' ?>>Announcement</option>
+    <option value="academic" <?= $img_category === 'academic' ? 'selected' : '' ?>>Academic</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label for="description">Description</label>
-                <textarea id="description" name="description" required></textarea>
+                <textarea id="description" name="description" required><?= htmlspecialchars($description, ENT_QUOTES) ?></textarea>
+        </div>
             </div>
 
             <div class="btn-container">
