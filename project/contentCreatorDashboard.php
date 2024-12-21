@@ -8,13 +8,34 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_type'] !== 'content_creator'
 }
 
 require "db.php";
-
 $CCName = $_SESSION['username']; 
 $contentCreatorId = $_SESSION['user_id']; 
+
+//Disable-enable modes for content creators
+$stmt = $db->prepare("
+    SELECT can_search_own_content, can_view_others_content, 
+           can_add_content, can_edit_content, can_delete_content
+    FROM user_permissions
+    WHERE user_id = :user_id
+");
+$stmt->execute([':user_id' => $contentCreatorId]);
+$permissions = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// Default permissions to 0 if not found
+if (!$permissions) {
+    $permissions = [
+        'can_search_own_content' => 0,
+        'can_view_others_content' => 0,
+        'can_add_content' => 0,
+        'can_edit_content' => 0,
+        'can_delete_content' => 0
+    ];
+}
+
+
 global $db;
 $success = false;
 $error = [];
-
 
 //Content deletion
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_content_id'])) {
@@ -243,6 +264,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'filter') {
         .btn:hover {
             background: #362a55;
         }
+
+        .btn:disabled, .btn[disabled] {
+           background: #cccccc; 
+           color: #666666; 
+           cursor: not-allowed; 
+}
 
         .content-grid {
             display: grid;
@@ -510,13 +537,13 @@ $(document).on('click', '.json-btn', function() {
     <div class="main-content">
         <div class="header">
             <div class="search-bar">
-                <input type="text" class="search-input" placeholder="Search content...">
-                <select class="filter-select">
+                <input type="text" class="search-input" placeholder="Search content..." <?= !$permissions['can_search_own_content'] ? 'disabled' : '' ?>>
+                <select class="filter-select" <?= !$permissions['can_search_own_content'] ? 'disabled' : '' ?>>
                     <option value="all">All Content</option>
                     <option value="approved">Approved</option>
                     <option value="pending">Pending</option>
                 </select>
-                <button class="btn" id="search-btn">Search</button>
+                <button class="btn" id="search-btn" <?= !$permissions['can_search_own_content'] ? 'disabled' : '' ?>>Search</button>
             </div>
             <div class="user-info">
                 <i class="fas fa-user-circle"></i>
@@ -547,11 +574,20 @@ $(document).on('click', '.json-btn', function() {
                     <?php endforeach; ?>
                 </div>
                 <div class="content-actions">
+                <?php if ($permissions['can_edit_content']): ?>
                 <a href="edit.php?content_id=<?= $content['id'] ?>" class="btn">Edit</a>
+                <?php else: ?>
+                    <button class="btn" disabled>Edit</button>
+                <?php endif; ?>
+
+                <?php if ($permissions['can_delete_content']): ?>
                 <form method="POST" action="contentCreatorDashboard.php" style="display:inline;">
                     <input type="hidden" name="delete_content_id" value="<?= $content['id'] ?>">
                     <button type="submit" class="btn delete-btn">Delete</button>
                 </form>
+                <?php else: ?>
+                    <button class="btn delete-btn" disabled>Delete</button>
+                <?php endif; ?>
             </div>
             </div>
         </div>
@@ -560,9 +596,9 @@ $(document).on('click', '.json-btn', function() {
           
         <!-- Add Content Button -->
         <a href="contentCreatorAddContent.php">
-            <button class="add-content-btn">
-                <i class="fas fa-plus"></i>
-            </button>
+    <button class="add-content-btn" <?= !$permissions['can_add_content'] ? 'disabled' : '' ?>>
+        <i class="fas fa-plus"></i>
+    </button>
         </a>
     </div>
 </body>
