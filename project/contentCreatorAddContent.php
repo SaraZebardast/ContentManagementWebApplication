@@ -1,3 +1,92 @@
+<?php
+session_start();
+require_once "./db.php";
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $title = $_POST['title'] ?? '';
+    $description = $_POST['description'] ?? '';
+    $category = $_POST['category'] ?? '';
+    $userId = $_SESSION['user_id'] ?? 1; // Default user ID for debugging
+
+    echo "Debug: Title - $title, Description - $description, User ID - $userId<br>";
+
+    // Validate input fields
+    if (empty($title) || empty($description) || empty($category)) {
+        die("Error: All fields are required.");
+    }
+
+    // Handle file upload
+    if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+        $fileTmpPath = $_FILES['image']['tmp_name'];
+        $fileName = $_FILES['image']['name'];
+        $fileSize = $_FILES['image']['size'];
+        $fileType = $_FILES['image']['type'];
+        $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+        // Define allowed types and size
+        $allowedTypes = ['jpg', 'jpeg', 'png', 'gif'];
+        $maxFileSize = 2 * 1024 * 1024; // 2 MB
+
+        echo "Debug: File Name - $fileName, Type - $fileType, Size - $fileSize<br>";
+
+        // Validate file type
+        if (!in_array($fileExt, $allowedTypes)) {
+            die("Error: Unsupported file type. Allowed types: JPG, PNG, GIF.");
+        }
+
+        // Validate file size
+        if ($fileSize > $maxFileSize) {
+            die("Error: File size exceeds 2 MB.");
+        }
+
+        // Upload directory
+        $uploadDir = './uploads/';
+        if (!is_dir($uploadDir)) {
+            mkdir($uploadDir, 0777, true); // Create directory with permissions
+        }
+
+        // Generate a unique name for the file
+        $newFileName = uniqid('img_', true) . '.' . $fileExt;
+        $destPath = $uploadDir . $newFileName;
+
+        // Move the file
+        if (move_uploaded_file($fileTmpPath, $destPath)) {
+            echo "File uploaded successfully to $destPath<br>";
+
+            // Insert data into the database
+            $stmt = $conn->prepare("INSERT INTO content (creator_id, title, description, image_path, img_category, status) VALUES (?, ?, ?, ?, ?, 'pending')");
+            if (!$stmt) {
+                die("SQL error: ");
+            }
+
+            $stmt->bind_param("issss", $userId, $title, $description, $destPath, $category);
+            if ($stmt->execute()) {
+                echo "Content added successfully!";
+            } else {
+                echo "Database error: ";
+            }
+            $stmt->close();
+        } else {
+            die("Error: Failed to move uploaded file.");
+        }
+    } else {
+        $error = $_FILES['image']['error'];
+        $errorMessages = [
+            UPLOAD_ERR_INI_SIZE => "File exceeds the upload_max_filesize directive.",
+            UPLOAD_ERR_FORM_SIZE => "File exceeds the MAX_FILE_SIZE directive.",
+            UPLOAD_ERR_PARTIAL => "File only partially uploaded.",
+            UPLOAD_ERR_NO_FILE => "No file uploaded.",
+            UPLOAD_ERR_NO_TMP_DIR => "Missing temporary folder.",
+            UPLOAD_ERR_CANT_WRITE => "Failed to write file to disk.",
+            UPLOAD_ERR_EXTENSION => "A PHP extension stopped the file upload."
+        ];
+        die("Error: " . ($errorMessages[$error] ?? "Unknown error."));
+    } 
+}
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +94,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create New Content</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+        document.getElementById('image').addEventListener('change', function (event) {
+    const [file] = event.target.files;
+    if (file) {
+        const preview = document.getElementById('preview');
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = 'block';
+    }
+});
+
+    </script>
     <style>
         * {
             margin: 0;
@@ -198,6 +298,16 @@
             display: none;
         }
     </style>
+    <script>
+    document.getElementById('image').addEventListener('change', function (event) {
+        const [file] = event.target.files;
+        if (file) {
+            const preview = document.getElementById('preview');
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = 'block';
+        }
+    });
+</script>
 </head>
 <body>
 <!-- Sidebar -->
