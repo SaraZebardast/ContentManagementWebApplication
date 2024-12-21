@@ -12,6 +12,8 @@ require "db.php";
 $CCName = $_SESSION['username']; 
 $contentCreatorId = $_SESSION['user_id']; 
 global $db;
+$success = false;
+$error = [];
 
 
 //Content deletion
@@ -30,24 +32,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_content_id']))
     }
 }
 
+// Get error message if any from save content operation
+if (isset($_GET['error'])) {
+    $error['save'] = $_GET['error'];
+}
+
+$success = isset($_GET['success']) && $_GET['success'] == '1';
+
 
 //Content search
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'search_and_filter') {
-    $searchQuery = $_POST['query'] ?? '';
-    $filter = $_POST['filter'] ?? 'all';
+    $searchQuery = isset($_POST['query']) ? $_POST['query'] : '';
+    $filter = isset($_POST['filter']) ? $_POST['filter'] : 'all';
 
-    $searchQuery = '%' . $searchQuery . '%'; 
+    $searchQuery = '%' . $searchQuery . '%';
 
+    // First get the content
     $query = "SELECT * FROM content WHERE creator_id = :creator_id";
 
-    
     if ($filter === 'approved') {
         $query .= " AND status = 'approved'";
     } elseif ($filter === 'pending') {
         $query .= " AND status = 'pending'";
     }
 
-    
     if (!empty($_POST['query'])) {
         $query .= " AND (title LIKE :query OR description LIKE :query)";
     }
@@ -61,6 +69,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
     $stmt->execute($params);
     $results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // For each content item, get its comments
+    foreach ($results as &$content) {
+        $commentStmt = $db->prepare("SELECT * FROM comments WHERE content_id = :content_id");
+        $commentStmt->execute([':content_id' => $content['id']]);
+        $content['comments'] = $commentStmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 
     echo json_encode($results);
     exit();
@@ -340,12 +355,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'filter') {
 
 //search
 $(document).ready(function () {
-   
-    function performSearchAndFilter() {
-        const query = $('.search-input').val().trim(); 
-        const filter = $('.filter-select').val(); 
 
-        // AJAX POST request
+    function performSearchAndFilter() {
+        const query = $('.search-input').val().trim();
+        const filter = $('.filter-select').val();
+
         $.ajax({
             url: 'contentCreatorDashboard.php',
             method: 'POST',
@@ -355,11 +369,9 @@ $(document).ready(function () {
                 filter: filter
             },
             success: function (response) {
-                console.log('AJAX response:', response);
-
                 try {
                     const data = JSON.parse(response);
-                    $('.content-grid').empty(); 
+                    $('.content-grid').empty();
 
                     if (data.length === 0) {
                         $('.content-grid').append('<p>No results found.</p>');
@@ -367,25 +379,40 @@ $(document).ready(function () {
                     }
 
                     data.forEach(content => {
-                        $('.content-grid').append(`
-                            <div class="content-card">
-                                <img src="${content.image_path}" alt="${content.title}" class="content-image">
-                                <div class="content-info">
-                                    <div class="content-title">${content.title}</div>
-                                    <span class="content-status ${content.status === 'approved' ? 'status-approved' : 'status-pending'}">
-                                        ${content.status === 'approved' ? 'Approved' : 'Pending'}
-                                    </span>
-                                    <p>${content.description}</p>
-                                    <div class="content-actions">
-                                        <a href="edit.php?content_id=${content.id}" class="btn">Edit</a>
-                                        <form method="POST" action="" style="display:inline;">
-                                            <input type="hidden" name="delete_content_id" value="${content.id}">
-                                            <button type="submit" class="btn delete-btn">Delete</button>
-                                        </form>
+                        let commentsHtml = '';
+                        if (content.comments && content.comments.length > 0) {
+                            commentsHtml = `
+                            <div class="comments-section">
+                                ${content.comments.map(comment => `
+                                    <div class="comment">
+                                        <i class="fas fa-comment"></i>
+                                        ${comment.comment}
                                     </div>
+                                `).join('')}
+                            </div>
+                        `;
+                        }
+
+                        $('.content-grid').append(`
+                        <div class="content-card">
+                            <img src="${content.image_path}" alt="${content.title}" class="content-image">
+                            <div class="content-info">
+                                <div class="content-title">${content.title}</div>
+                                <span class="content-status ${content.status === 'approved' ? 'status-approved' : 'status-pending'}">
+                                    ${content.status === 'approved' ? 'Approved' : 'Pending'}
+                                </span>
+                                <p>${content.description}</p>
+                                ${commentsHtml}
+                                <div class="content-actions">
+                                    <a href="edit.php?content_id=${content.id}" class="btn">Edit</a>
+                                    <form method="POST" action="contentCreatorDashboard.php" style="display:inline;">
+                                        <input type="hidden" name="delete_content_id" value="${content.id}">
+                                        <button type="submit" class="btn delete-btn">Delete</button>
+                                    </form>
                                 </div>
                             </div>
-                        `);
+                        </div>
+                    `);
                     });
                 } catch (err) {
                     console.error('Error parsing JSON:', err);
@@ -410,36 +437,6 @@ $(document).ready(function () {
 });
 
 
-//delete-btn
-$(document).on('click', '.delete-btn', function () {
-    const contentId = $(this).data('id');
-    if (confirm('Are you sure you want to delete this content?')) {
-        $.ajax({
-            url: '',
-            type: 'POST',
-            data: { action: 'delete', content_id: contentId },
-            success: function (response) {
-                try {
-                    const result = JSON.parse(response);
-                    if (result.success) {
-                        alert('Content deleted successfully!');
-                        location.reload();
-                    } else {
-                        alert('Error: ' + (result.error || 'Failed to delete content.'));
-                    }
-                } catch (error) {
-                    console.error('Invalid JSON response:', response);
-                    alert('Unexpected error occurred.');
-                }
-            },
-            error: function (xhr, status, error) {
-                console.error('AJAX Error:', status, error);
-                alert('Failed to send request. Please try again.');
-            }
-        });
-    }
-});
-
 $('.filter-select').change(function() {
     const filter = $(this).val();
     $.post('', { action: 'filter', filter: filter }, function(response) {
@@ -457,8 +454,7 @@ $('.filter-select').change(function() {
                         <p>${content.description}</p>
                         <div class="content-actions">
                             <a href="edit.php?content_id=${content.id}" class="btn">Edit</a>
-                            <button class="btn delete-btn" data-id="<?= $content['id'] ?>">Delete</button>
-
+                            <button class="btn delete-btn" data-id="${content.id}">Delete</button>
                         </div>
                     </div>
                 </div>
@@ -473,9 +469,6 @@ $(document).on('click', '.json-btn', function() {
         alert(JSON.stringify(response));
     });
 });
-
-        
-
 
     </script>
 </head>
@@ -534,13 +527,13 @@ $(document).on('click', '.json-btn', function() {
         <div class="content-grid">
     <?php foreach ($contents as $content): ?>
         <div class="content-card">
-            <img src="<?= htmlspecialchars($content['image_path'] ?? '/api/placeholder/300/200', ENT_QUOTES) ?>" alt="Content" class="content-image">
+            <img src="<?= htmlspecialchars(isset($content['image_path']) ? $content['image_path'] : '/api/placeholder/300/200', ENT_QUOTES) ?>" alt="Content" class="content-image">
             <div class="content-info">
-                <div class="content-title"><?= htmlspecialchars($content['title'] ?? 'Untitled', ENT_QUOTES) ?></div>
+                <div class="content-title"><?= htmlspecialchars(isset($content['title']) ? $content['title'] : 'Untitled', ENT_QUOTES) ?></div>
                 <span class="content-status <?= isset($content['status']) && $content['status'] === 'approved' ? 'status-approved' : 'status-pending' ?>">
-                    <?= htmlspecialchars(ucfirst($content['status'] ?? 'Pending'), ENT_QUOTES) ?>
+                    <?= htmlspecialchars(ucfirst(isset($content['status']) ? $content['status'] : 'Pending'), ENT_QUOTES) ?>
                 </span>
-                <p><?= htmlspecialchars($content['description'] ?? 'No description available.', ENT_QUOTES) ?></p>
+                <p><?= htmlspecialchars(isset($content['description']) ? $content['description'] : 'No description available.', ENT_QUOTES) ?></p>
                 <div class="comments-section">
                     <?php
                     $commentStmt = $db->prepare("SELECT * FROM comments WHERE content_id = :content_id");
@@ -549,7 +542,7 @@ $(document).on('click', '.json-btn', function() {
                     foreach ($comments as $comment): ?>
                         <div class="comment">
                             <i class="fas fa-comment"></i>
-                            <?= htmlspecialchars($comment['comment'] ?? 'No comment', ENT_QUOTES) ?>
+                            <?= htmlspecialchars(isset($comment['comment']) ? $comment['comment'] : 'No comment', ENT_QUOTES) ?>
                         </div>
                     <?php endforeach; ?>
                 </div>
